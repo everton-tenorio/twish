@@ -1,0 +1,108 @@
+#!/bin/bash
+# author: Everton Tenorio
+
+# Alias tw=/home/...
+# Read and Install xurl: https://github.com/xdevplatform/xurl
+# Rate Limits: https://docs.x.com/x-api/fundamentals/rate-limits
+# Auth: You must have a developer account and app to use the xurl tool.
+
+auth_tw() {
+    xurl auth app --bearer-token "$TW_BEARER_TOKEN"
+
+    export CLIENT_ID="${TW_CLIENT_ID:-DEFAULT_VALUE}"
+    export CLIENT_SECRET="${TW_CLIENT_SECRET:-DEFAULT_VALUE}"
+
+    xurl auth oauth2
+
+    echo -e "
+🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛
+🐦‍⬛     __         _     __    🐦‍⬛
+🐦‍⬛    / /__    __(_)__ / /    🐦‍⬛
+🐦‍⬛   / __/ |/|/ / (_-</ _ \   🐦‍⬛
+🐦‍⬛   \__/|__,__/_/___/_//_/   🐦‍⬛
+🐦‍⬛                            🐦‍⬛
+🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛"
+    xurl /2/users/me
+
+    xurl auth status
+    exit 0
+}
+
+send_tweet() {
+    local tweet_text="$1"
+
+    if [ -z "$tweet_text" ]; then
+        echo "❌ You need to provide text for the tweet!"
+        exit 1
+    fi
+
+    response=$(xurl -X POST /2/tweets -d '{"text": "'"$tweet_text"'"}')
+    TWEET_ID=$(echo "$response" | jq -r '.data.id')
+
+    if [ -n "$TWEET_ID" ]; then
+        echo "✅ Tweet successfully posted! ID: $TWEET_ID"
+    else
+        echo "❌ Error posting tweet!"
+        exit 1
+    fi
+}
+
+reply_tweet() {
+    local tweet_id="$1"
+    local tweet_text="${@:2}"  # Ensures the full message is captured
+
+    if [ -z "$tweet_id" ] || [ -z "$tweet_text" ]; then
+        echo "❌ Correct usage: ./tw -rep <tweet_id> \"message\""
+        exit 1
+    fi
+
+    response=$(xurl -X POST /2/tweets -d '{"reply":{"in_reply_to_tweet_id": "'"$tweet_id"'"}, "text": "'"$tweet_text"'"}')
+    echo "$response"
+    exit 0
+}
+
+delete_tweet() {
+    local tweet_id="$1"
+
+    if [ -z "$tweet_id" ] && [ -z "$TWEET_ID" ]; then
+        echo "❌ You need to provide a tweet ID to delete!"
+        exit 1
+    fi
+
+    tweet_id=${tweet_id:-$TWEET_ID}  # Uses the last posted tweet if available
+
+    response=$(xurl -X DELETE "/2/tweets/$tweet_id")
+
+    if echo "$response" | jq -e '.data' > /dev/null; then
+        echo "🗑️ Tweet with ID $tweet_id successfully deleted!"
+    else
+        echo "❌ Error deleting tweet!"
+        exit 1
+    fi
+    exit 0
+}
+
+# Arguments
+case "$1" in
+    -auth)
+        auth_tw
+        ;;
+    -rep)
+        reply_tweet "$2" "${@:3}"
+        ;;
+    -del)
+        delete_tweet "$2"
+        ;;
+    "")
+        echo "❌ Please provide tweet text or a valid command!"
+        echo "Usage: ./tw \"Tweet text\"" 
+        echo "       ./tw -auth"
+        echo "       ./tw -rep <tweet_id> \"reply message\""
+        echo "       ./tw -del <tweet_id>"
+        exit 1
+        ;;
+    *)
+        send_tweet "$1"
+        ;;
+esac
+
