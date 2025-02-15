@@ -4,38 +4,36 @@
     <img src="twish.jpg" width="500px"/> 
 </div>
 
+## Requirements:
+  - Read and Install xurl: [https://github.com/xdevplatform/xurl](https://github.com/xdevplatform/xurl)
+  - Rate Limits: [https://docs.x.com/x-api/fundamentals/rate-limits](https://docs.x.com/x-api/fundamentals/rate-limits)
+  - Authentication: You must have a developer account and an app to use the xurl tool.
 
-Req.:
-  - Read and Install xurl: https://github.com/xdevplatform/xurl
-  - Rates Limits: https://docs.x.com/x-api/fundamentals/rate-limits
-  - Auth: You must have a developer account and app to use xurl tool.
-
-
-### Use o script como um comando
+### Use the script as a command
 ```bash
 alias tw=<...path choice/tw>
 ```
 
-### Autenticação
-Na conta developer voce deverá obter os valores de BEATER TOKEN, CLIENT_ID e CLIENT_SECRET.
-Esses valores serão utilizados primeiramente no script, em seguida autentique-se.
+### Authentication
+In the developer account, you need to obtain the values for BEARER TOKEN, CLIENT_ID, and CLIENT_SECRET.  
+These values will first be used in the script, then authenticate yourself.  
 ```bash
 tw -auth
 ```
 
-### Post um tweet
+### Post a tweet
 ```bash
 tw "New post!"
 ```
 
-### Responda tweets
-**Necessário obter id*
+### Reply to tweets
+**You need to obtain the ID**
 ```bash
 tw -rep <tweet_id> "reply"
 ```
 
-### Delete tweets. 
-**Necessário obter id*
+### Delete tweets  
+**You need to obtain the ID**
 ```bash
 tw -del <tweet_id>
 ```
