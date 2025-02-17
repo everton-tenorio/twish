@@ -26,6 +26,11 @@ tw -auth
 tw "New post!"
 ```
 
+...With media
+```bash
+tw "New post!" image.jpg
+```
+
 ### Reply to tweets
 **You need to obtain the ID**
 ```bash
