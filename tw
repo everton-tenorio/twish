@@ -28,15 +28,45 @@ auth_tw() {
     exit 0
 }
 
+
 send_tweet() {
     local tweet_text="$1"
+    local media_file="$2"
+    local media_id=""
 
     if [ -z "$tweet_text" ]; then
         echo "❌ You need to provide text for the tweet!"
         exit 1
     fi
 
-    response=$(xurl -X POST /2/tweets -d '{"text": "'"$tweet_text"'"}')
+    # If the user provided a media file, upload it first
+    if [ -n "$media_file" ]; then
+        echo "📤 Uploading media: $media_file..."
+        upload_response=$(curl --silent --request POST \
+            --url "https://api.x.com/2/media/upload" \
+            --header "Authorization: Bearer <TW_TOKEN_OAUTH2>" \
+            --header "Content-Type: multipart/form-data" \
+            --form "media=@$media_file")
+
+        # Extract media_id from the JSON response
+        media_id=$(echo "$upload_response" | jq -r '.id')
+
+        if [ -z "$media_id" ] || [ "$media_id" == "null" ]; then
+            echo "❌ Error uploading media!"
+            exit 1
+        fi
+        echo "✅ Media uploaded successfully! ID: $media_id"
+    fi
+
+    # Construct payload for the tweet
+    if [ -n "$media_id" ]; then
+        payload='{"text": "'"$tweet_text"'", "media": {"media_ids":["'"$media_id"'"]}}'
+    else
+        payload='{"text": "'"$tweet_text"'"}'
+    fi
+
+    # Send tweet
+    response=$(xurl -X POST /2/tweets -d "$payload")
     TWEET_ID=$(echo "$response" | jq -r '.data.id')
 
     if [ -n "$TWEET_ID" ]; then
@@ -46,6 +76,7 @@ send_tweet() {
         exit 1
     fi
 }
+
 
 reply_tweet() {
     local tweet_id="$1"
@@ -60,6 +91,7 @@ reply_tweet() {
     echo "$response"
     exit 0
 }
+
 
 delete_tweet() {
     local tweet_id="$1"
@@ -82,6 +114,7 @@ delete_tweet() {
     exit 0
 }
 
+
 # Arguments
 case "$1" in
     -auth)
@@ -102,7 +135,7 @@ case "$1" in
         exit 1
         ;;
     *)
-        send_tweet "$1"
+        send_tweet "$1" "$2"
         ;;
 esac
 
