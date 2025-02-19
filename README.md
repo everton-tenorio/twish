@@ -31,6 +31,10 @@ tw "New post!"
 tw "New post!" image.jpg
 ```
 
+```bash
+tw "New post!" https://anyurl-image.up/image.jpg
+```
+
 ### Reply to tweets
 **You need to obtain the ID**
 ```bash
