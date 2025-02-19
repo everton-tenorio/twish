@@ -41,10 +41,13 @@ send_tweet() {
 
     # If the user provided a media file, upload it first
     if [ -n "$media_file" ]; then
+
+        TW_OAUTH2_TOKEN=$(cat $HOME/.xurl | jq -r '.oauth2_tokens.<your username>.oauth2.access_token')
+        
         echo "📤 Uploading media: $media_file..."
         upload_response=$(curl --silent --request POST \
             --url "https://api.x.com/2/media/upload" \
-            --header "Authorization: Bearer <TW_TOKEN_OAUTH2>" \
+            --header "Authorization: Bearer $TW_OAUTH2_TOKEN" \
             --header "Content-Type: multipart/form-data" \
             --form "media=@$media_file")
 
