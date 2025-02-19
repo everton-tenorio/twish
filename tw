@@ -7,12 +7,8 @@
 # Auth: You must have a developer account and app to use the xurl tool.
 
 auth_tw() {
-    xurl auth app --bearer-token "$TW_BEARER_TOKEN"
-
-    export CLIENT_ID="${TW_CLIENT_ID:-DEFAULT_VALUE}"
-    export CLIENT_SECRET="${TW_CLIENT_SECRET:-DEFAULT_VALUE}"
-
-    xurl auth oauth2
+    export CLIENT_ID=$(cat $HOME/twish/.env  | jq -r '.tw_auth.CLIENT_ID')
+    export CLIENT_SECRET=$(cat $HOME/twish/.env  | jq -r '.tw_auth.CLIENT_SECRET')
 
     echo -e "
 🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛
@@ -22,6 +18,10 @@ auth_tw() {
 🐦‍⬛   \__/|__,__/_/___/_//_/   🐦‍⬛
 🐦‍⬛                            🐦‍⬛
 🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛"
+
+    xurl auth app --bearer-token $(cat $HOME/twish/.env  | jq -r '.tw_auth.BEARER')
+    xurl auth oauth2
+
     xurl /2/users/me
 
     xurl auth status
