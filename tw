@@ -91,7 +91,8 @@ send_tweet() {
     TWEET_ID=$(echo "$response" | jq -r '.data.id')
 
     if [ -n "$TWEET_ID" ]; then
-        echo "✅ Tweet successfully posted! ID: $TWEET_ID"
+        username=$(xurl /2/users/me | jq -r '.data.username')
+        echo -e "✅ Tweet posted! URL: https://x.com/$username/status/$TWEET_ID"
     else
         echo "❌ Error posting tweet!"
         exit 1
