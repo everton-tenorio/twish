@@ -41,9 +41,27 @@ send_tweet() {
 
     # If the user provided a media file, upload it first
     if [ -n "$media_file" ]; then
+        if [[ "$media_file" =~ ^https?://.*\.(jpg|jpeg|png|gif|webp)$ ]]; then
+
+            FILE_NAME="image_$(date +%Y%m%d%H%M%S).jpg"
+
+            # Download
+            curl --silent -A \
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) \
+                Chrome/120.0.0.0 Safari/537.36" \
+                -o "$FILE_NAME" "$media_file"
+
+            media_file=$FILE_NAME
+            echo "📜 '$media_file'"
+        elif [[ -f "$media_file" ]]; then
+            echo "📜 '$media_file'"
+        else
+            echo -e "Error: Invalid Argument. \nSend post examples: \n- tw \"New Post\" \n- tw \"New Post\" https://.../image.png"
+            exit 1
+        fi
 
         TW_OAUTH2_TOKEN=$(cat $HOME/.xurl | jq -r '.oauth2_tokens.<your username>.oauth2.access_token')
-        
+
         echo "📤 Uploading media: $media_file..."
         upload_response=$(curl --silent --request POST \
             --url "https://api.x.com/2/media/upload" \
