@@ -10,6 +10,8 @@ auth_tw() {
     export CLIENT_ID=$(cat $HOME/twish/.env  | jq -r '.tw_auth.CLIENT_ID')
     export CLIENT_SECRET=$(cat $HOME/twish/.env  | jq -r '.tw_auth.CLIENT_SECRET')
 
+    clear
+
     echo -e "
 🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛
 🐦‍⬛     __         _     __    🐦‍⬛
@@ -19,12 +21,13 @@ auth_tw() {
 🐦‍⬛                            🐦‍⬛
 🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛🐦‍⬛"
 
+    echo -e "\nThe app wants to access your X account..."
+
     xurl auth app --bearer-token $(cat $HOME/twish/.env  | jq -r '.tw_auth.BEARER')
     xurl auth oauth2
 
-    xurl /2/users/me
-
-    xurl auth status
+    # xurl /2/users/me
+    # xurl auth status
     exit 0
 }
 
@@ -92,6 +95,7 @@ send_tweet() {
 
     if [ -n "$TWEET_ID" ]; then
         username=$(xurl /2/users/me | jq -r '.data.username')
+        echo "🐦‍ ID: $TWEET_ID"
         echo -e "✅ Tweet posted! URL: https://x.com/$username/status/$TWEET_ID"
     else
         echo "❌ Error posting tweet!"
@@ -137,6 +141,25 @@ delete_tweet() {
 }
 
 
+generate_twai() {
+    local tweet_text="${@:1}"
+
+    if [ -z "$tweet_text" ]; then
+        echo "❌ Correct usage: ./tw -gen \"message\""
+        exit 1
+    fi
+
+    source $HOME/twish/twai/venv/bin/activate
+    python $HOME/twish/twai/twai.py "$tweet_text"
+    deactivate
+    rm -rf $HOME/twish/twai/__pycache__
+
+    TWEET_EN=$(cat /tmp/tweet-en.txt)
+    send_tweet "$TWEET_EN" "$2"
+    exit 0
+}
+
+
 # Arguments
 case "$1" in
     -auth)
@@ -148,16 +171,19 @@ case "$1" in
     -del)
         delete_tweet "$2"
         ;;
+    -gen)
+        generate_twai "${@:2}"
+        ;;
     "")
         echo "❌ Please provide tweet text or a valid command!"
         echo "Usage: ./tw \"Tweet text\"" 
         echo "       ./tw -auth"
         echo "       ./tw -rep <tweet_id> \"reply message\""
         echo "       ./tw -del <tweet_id>"
+        echo "       ./tw -gen \"Tweet text\""
         exit 1
         ;;
     *)
         send_tweet "$1" "$2"
         ;;
 esac
-
